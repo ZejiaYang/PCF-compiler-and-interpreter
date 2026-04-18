@@ -10,7 +10,7 @@ let test_shadowing () =
   let t = APP (APP (FUN ("x", FUN ("x", VAR "x")), INT 2), INT 3) in
   check value "shadowing" (INT 3) (eval_by_name t)
 
-let test_high_order () =
+let test_higher_order () =
   (* (fun x -> fun y -> (fun x -> x + y) x) 4 5 ==> 9 *)
   let inner = FUN ("x", VAR "x" ++ VAR "y") in
   let t =
@@ -28,6 +28,22 @@ let test_static_vs_dynamic () =
   *)
   let f_body = FUN ("y", VAR "y" ++ VAR "x") in
   let t =
-    LET ("x", INT 4, LET ("f", f_body, LET ("x", INT 5, APP (f_body, INT 6))))
+    LET ("x", INT 4, LET ("f", f_body, LET ("x", INT 5, APP (VAR "f", INT 6))))
   in
   check value "static binding" (INT 10) (eval_by_name t)
+
+let test_call_by_name () =
+  (* (fun x -> 0) ((fix f. fun x -> f x) 0) ==> 0 *)
+  let diverge = APP (FIX ("f", FUN ("x", APP (VAR "f", VAR "x"))), INT 0) in
+  let t = APP (FUN ("x", INT 0), diverge) in
+  check value "call by name ignores argument" (INT 0) (eval_by_name t)
+
+let test_suite =
+  [
+    ("shadowing", `Quick, test_shadowing);
+    ("higher_order", `Quick, test_higher_order);
+    ("static_binding", `Quick, test_static_vs_dynamic);
+    ("call_by_name", `Quick, test_call_by_name);
+  ]
+
+let () = run "eval_by_name suite" [ ("pcf tests", test_suite) ]

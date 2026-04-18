@@ -5,12 +5,15 @@ let rec is_value = function INT _ -> true | FUN _ -> true | _ -> false
 let rec sub (x : string) (u : term) (t : term) : term =
   let sub' = sub x u in
   match t with
-  | VAR x -> u
-  | FUN _ | INT _ -> t
+  | INT _ -> t
+  | VAR y -> if x == y then u else t
+  | FUN (y, p) -> if x == y then t else FUN (y, sub' p)
   | BOP (p1, op, p2) -> BOP (sub' p1, op, sub' p2)
   | IFZ (p1, p2, p3) -> IFZ (sub' p1, sub' p2, sub' p3)
   | APP (p1, p2) -> APP (sub' p1, sub' p2)
-  | LET (y, p1, p2) -> if x == y then t else LET (y, sub' p1, sub' p2)
+  | LET (y, p1, p2) ->
+      let p1' = sub' p1 in
+      if x == y then LET (y, p1', p2) else LET (y, p1', sub' p2)
   | FIX (y, p) -> if x == y then t else FIX (y, sub' p)
 
 (*
