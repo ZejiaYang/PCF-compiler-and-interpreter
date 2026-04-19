@@ -49,8 +49,8 @@ let rec eval_by_name (p : term) : term =
       | _ -> failwith "binary operands not integer")
   | IFZ (p1, p2, p3) -> (
       match eval_by_name p1 with
-      | INT 0 -> eval_by_name p2
-      | _ -> eval_by_name p3)
+      | INT n -> if n == 0 then eval_by_name p2 else eval_by_name p3
+      | _ -> failwith "if condition not bool")
   | APP (p1, p2) -> (
       match eval_by_name p1 with
       | FUN (x, t) -> eval_by_name (sub x p2 t)

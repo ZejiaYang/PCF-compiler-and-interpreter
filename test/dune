@@ -9,3 +9,7 @@
 (test
  (name test_eval)
  (libraries pcf alcotest))
+
+(test
+ (name test_interp)
+ (libraries pcf alcotest))
