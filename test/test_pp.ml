@@ -56,11 +56,12 @@ let db_tests =
     test_case "let" `Quick (fun () ->
         check_pp "let" "let . = 1 in #0"
           (pp_to_string pp_db_term (DBLET (DBINT 1, DBVAR 0))));
-    test_case "fix" `Quick (fun () ->
-        check_pp "fix" "fix . #0" (pp_to_string pp_db_term (DBFIX (DBVAR 0))));
-    test_case "fix_trans" `Quick (fun () ->
-        check_pp "fix_trans"
-          "fix . fun . -> if #0 = 0 then 1 else (#0 * (#1 (#0 - 1)))"
+    test_case "fixfun" `Quick (fun () ->
+        check_pp "fixfun" "fixfun . -> fun . -> #0"
+          (pp_to_string pp_db_term (DBFIXFUN (DBVAR 0))));
+    test_case "fixfun_trans" `Quick (fun () ->
+        check_pp "fixfun_trans"
+          "fixfun . -> fun . -> if #0 = 0 then 1 else (#0 * (#1 (#0 - 1)))"
           (pp_to_string pp_db_term
              (translate_db
                 (FIX

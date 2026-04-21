@@ -57,5 +57,5 @@ let make_interp_tests (interp : interpreter) =
   ]
 
 let () =
-  run "interp_by_value suite"
-    [ ("pcf tests", make_interp_tests interp_by_value) ]
+  run "interp_by_value_recur suite"
+    [ ("pcf tests", make_interp_tests interp_by_value_recur) ]

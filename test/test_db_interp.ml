@@ -44,15 +44,13 @@ let test_db_fact (interp : dbinterpreter) () =
   (* fix . fun . -> ifz #0 then 1 else #0 * (#1 (#0 - 1)) *)
   (* #0 is the arg, #1 is the fixpoint (the function itself) *)
   let fact =
-    DBFIX
-      (DBFUN
-         (DBIFZ
-            ( DBVAR 0,
-              DBINT 1,
-              DBBOP
-                ( DBVAR 0,
-                  MULTI,
-                  DBAPP (DBVAR 1, DBBOP (DBVAR 0, MINUS, DBINT 1)) ) )))
+    DBFIXFUN
+      (DBIFZ
+         ( DBVAR 0,
+           DBINT 1,
+           DBBOP
+             (DBVAR 0, MULTI, DBAPP (DBVAR 1, DBBOP (DBVAR 0, MINUS, DBINT 1)))
+         ))
   in
   let t = DBAPP (fact, DBINT 3) in
   check db_value "factorial" (DBINT 6) (fst (interp (t, END)))

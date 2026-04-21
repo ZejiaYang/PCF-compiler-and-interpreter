@@ -7,7 +7,7 @@ type dbterm =
   | DBINT of int
   | DBBOP of dbterm * op * dbterm
   | DBIFZ of dbterm * dbterm * dbterm
-  | DBFIX of dbterm
+  | DBFIXFUN of dbterm (*recursive closure*)
   | DBLET of dbterm * dbterm
 
 type var_env = END | NEXT of string * var_env
@@ -42,4 +42,8 @@ let rec translate_db (t : term) (venv : var_env) : dbterm =
       let db_p1 = translate_db p1 venv in
       let db_p2 = translate_db p2 (NEXT (x, venv)) in
       DBLET (db_p1, db_p2)
-  | FIX (x, p) -> DBFIX (translate_db p (NEXT (x, venv)))
+  | FIX (f, FUN (x, t)) -> DBFIXFUN (translate_db t (NEXT (x, NEXT (f, venv))))
+  | _ ->
+      failwith
+        "illegal construct, this is a langauge with only functions can be \
+         recursively defined"

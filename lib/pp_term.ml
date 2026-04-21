@@ -34,6 +34,6 @@ let rec pp_db_term fmt t =
   | DBIFZ (p1, p2, p3) ->
       fprintf fmt "@[<2>if %a = 0 then@ %a@ else@ %a@]" pp_db_term p1 pp_db_term
         p2 pp_db_term p3
-  | DBFIX p -> fprintf fmt "@[<2>fix .@ %a@]" pp_db_term p
+  | DBFIXFUN p -> fprintf fmt "@[<2>fixfun . ->@ fun . ->@ %a@]" pp_db_term p
   | DBLET (p1, p2) ->
       fprintf fmt "@[<2>let . = %a in@ %a@]" pp_db_term p1 pp_db_term p2
