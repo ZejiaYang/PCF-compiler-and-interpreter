@@ -1,6 +1,7 @@
 open Term
 open Interp
 open Db_term
+open Db_interp
 open Format
 
 let pp_op fmt = function
@@ -41,9 +42,17 @@ let rec pp_db_term fmt t =
 
 let rec pp_value fmt v =
   match v with
-  | VINT n -> Format.fprintf fmt "%d" n
+  | VINT n -> fprintf fmt "%d" n
   | VFUN (x, p, _) -> fprintf fmt "@[<2>fun %s ->@ %a@]" x pp_term p
-  | VFIX (f, p, _) -> Format.fprintf fmt "@[<2>fix %s.@ %a@]" f pp_term p
+  | VFIX (f, p, _) -> fprintf fmt "@[<2>fix %s.@ %a@]" f pp_term p
   | VFIXFUN (f, x, p, _env) ->
-      Format.fprintf fmt "@[<2>fixfun %s ->@ fun %s ->@ %a@]" f x pp_term p
+      fprintf fmt "@[<2>fixfun %s ->@ fun %s ->@ %a@]" f x pp_term p
   | THUNK (t, _) -> fprintf fmt "@[<2><thunk %a>@]" pp_term t
+
+let rec pp_db_value fmt v =
+  match v with
+  | VDBINT n -> fprintf fmt "%d" n
+  | VDBFUN (t, e) -> fprintf fmt "@[<2>fun . ->@ %a@]" pp_db_term t
+  | VDBFIXFUN (t, env) ->
+      fprintf fmt "@[<2>fixfun . ->@ fun . ->@ %a@]" pp_db_term t
+  | DBTHUNK (t, _) -> fprintf fmt "@[<2><thunk %a>@]" pp_db_term t
