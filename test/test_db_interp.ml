@@ -16,7 +16,7 @@ let test_db_shadowing (interp : dbinterpreter) () =
   (* (fun . -> fun . -> #0) 2 3 => 3 *)
   (* The inner-most #0 refers to the argument '3' *)
   let t = DBAPP (DBAPP (DBFUN (DBFUN (DBVAR 0)), DBINT 2), DBINT 3) in
-  check db_value "shadowing" (VDBINT 3) (interp (t, END))
+  check db_value "shadowing" (VDBINT 3) (interp (t, DBEND))
 
 let test_db_higher_order (interp : dbinterpreter) () =
   (* (fun . -> fun . -> (fun . -> #0 + #1) #1) 4 5 ==> 9 *)
@@ -25,7 +25,7 @@ let test_db_higher_order (interp : dbinterpreter) () =
   let t =
     DBAPP (DBAPP (DBFUN (DBFUN (DBAPP (inner, DBVAR 1))), DBINT 4), DBINT 5)
   in
-  check db_value "higher order" (VDBINT 9) (interp (t, END))
+  check db_value "higher order" (VDBINT 9) (interp (t, DBEND))
 
 let test_db_static_vs_dynamic (interp : dbinterpreter) () =
   (*
@@ -38,7 +38,7 @@ let test_db_static_vs_dynamic (interp : dbinterpreter) () =
   let t =
     DBLET (DBINT 4, DBLET (f_body, DBLET (DBINT 5, DBAPP (DBVAR 1, DBINT 6))))
   in
-  check db_value "static binding" (VDBINT 10) (interp (t, END))
+  check db_value "static binding" (VDBINT 10) (interp (t, DBEND))
 
 let test_db_fact (interp : dbinterpreter) () =
   (* fix . fun . -> ifz #0 then 1 else #0 * (#1 (#0 - 1)) *)
@@ -53,7 +53,7 @@ let test_db_fact (interp : dbinterpreter) () =
          ))
   in
   let t = DBAPP (fact, DBINT 3) in
-  check db_value "factorial" (VDBINT 6) (interp (t, END))
+  check db_value "factorial" (VDBINT 6) (interp (t, DBEND))
 
 let test_db_fact2 (interp : dbinterpreter) () =
   (* fix . fun . -> ifz #0 then 1 else #0 * (#1 (#0 - 1)) *)
@@ -66,7 +66,7 @@ let test_db_fact2 (interp : dbinterpreter) () =
       )
   in
   let t = APP (fact, INT 3) in
-  check db_value "factorial" (VDBINT 6) (interp (translate_db t VEND, END))
+  check db_value "factorial" (VDBINT 6) (interp (translate_db t VEND, DBEND))
 
 let make_db_interp_tests (interp : dbinterpreter) =
   [

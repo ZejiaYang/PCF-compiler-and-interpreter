@@ -9,15 +9,19 @@ type dbterm =
   | DBIFZ of dbterm * dbterm * dbterm
   | DBFIXFUN of dbterm (*recursive closure*)
   | DBLET of dbterm * dbterm
+  | DBPAIR of dbterm * dbterm
+  | DBFST of dbterm
+  | DBSND of dbterm
 
 type var_env = VEND | VNEXT of string * var_env
 
-type dbenv = END | NEXT of dbvalue * dbenv
+type dbenv = DBEND | DBNEXT of dbvalue * dbenv
 
 and dbvalue =
   | VDBINT of int
   | VDBFUN of dbterm * dbenv
   | VDBFIXFUN of dbterm * dbenv
+  | VDBPAIR of dbvalue * dbvalue
   | DBTHUNK of dbterm * dbenv
 
 let rec find_pos (x : string) (venv : var_env) =
@@ -52,7 +56,34 @@ let rec translate_db (t : term) (venv : var_env) : dbterm =
       DBLET (db_p1, db_p2)
   | FIX (f, FUN (x, t)) ->
       DBFIXFUN (translate_db t (VNEXT (x, VNEXT (f, venv))))
-  | _ ->
+  | FIX _ ->
       failwith
         "illegal construct, this is a langauge with only functions can be \
          recursively defined"
+  | PAIR (p1, p2) -> DBPAIR (translate_db p1 venv, translate_db p2 venv)
+  | FST p -> DBFST (translate_db t venv)
+  | SND p -> DBSND (translate_db t venv)
+
+let rec translate_env (tenv : env) : var_env * dbenv =
+  match tenv with
+  | END -> (VEND, DBEND)
+  | NEXT (x, v, e) ->
+      let venv, denv = translate_env e in
+      let dbv = translate_db_val v venv in
+      (VNEXT (x, venv), DBNEXT (dbv, denv))
+
+and translate_db_val (v : value) (venv : var_env) : dbvalue =
+  match v with
+  | VINT n -> VDBINT n
+  | VFUN (x, t, e) ->
+      let v_env_inner, d_env_inner = translate_env e in
+      VDBFUN (translate_db t (VNEXT (x, v_env_inner)), d_env_inner)
+  | VPAIR (v1, v2) ->
+      VDBPAIR (translate_db_val v1 venv, translate_db_val v2 venv)
+  | VFIXFUN (f, x, t, e) ->
+      let v_env_inner, d_env_inner = translate_env e in
+      VDBFIXFUN (translate_db t (VNEXT (x, VNEXT (f, v_env_inner))), d_env_inner)
+  | THUNK (t, e) ->
+      let v_env_inner, d_env_inner = translate_env e in
+      DBTHUNK (translate_db t v_env_inner, d_env_inner)
+  | VFIX _ -> failwith "db_term only has recursive functions"

@@ -8,8 +8,7 @@ let pp_op fmt = function
   | MULTI -> fprintf fmt "*"
   | DIVIDE -> fprintf fmt "/"
 
-let rec pp_term fmt t =
-  match t with
+let rec pp_term fmt = function
   | INT n -> fprintf fmt "%d" n
   | VAR x -> fprintf fmt "%s" x
   | FUN (x, p) -> fprintf fmt "@[<2>fun %s ->@ %a@]" x pp_term p
@@ -26,8 +25,7 @@ let rec pp_term fmt t =
   | FST p -> fprintf fmt "@[<2>fst %a@]" pp_term p
   | SND p -> fprintf fmt "@[<2>snd %a@]" pp_term p
 
-let rec pp_db_term fmt t =
-  match t with
+let rec pp_db_term fmt = function
   | DBINT n -> fprintf fmt "%d" n
   | DBVAR i -> fprintf fmt "#%d" i
   | DBFUN t -> fprintf fmt "@[<2>fun . ->@ %a@]" pp_db_term t
@@ -40,9 +38,12 @@ let rec pp_db_term fmt t =
   | DBFIXFUN p -> fprintf fmt "@[<2>fixfun . ->@ fun . ->@ %a@]" pp_db_term p
   | DBLET (p1, p2) ->
       fprintf fmt "@[<2>let . = %a in@ %a@]" pp_db_term p1 pp_db_term p2
+  | DBPAIR (p1, p2) ->
+      fprintf fmt "@[<2>(%a , %a)@]" pp_db_term p1 pp_db_term p2
+  | DBFST p -> fprintf fmt "@[<2>fst %a@]" pp_db_term p
+  | DBSND p -> fprintf fmt "@[<2>snd %a@]" pp_db_term p
 
-let rec pp_value fmt v =
-  match v with
+let rec pp_value fmt = function
   | VINT n -> fprintf fmt "%d" n
   | VFUN (x, p, _) -> fprintf fmt "@[<2>fun %s ->@ %a@]" x pp_term p
   | VFIX (f, p, _) -> fprintf fmt "@[<2>fix %s.@ %a@]" f pp_term p
@@ -51,10 +52,11 @@ let rec pp_value fmt v =
   | VPAIR (p1, p2) -> fprintf fmt "@[<2>(%a , %a)@]" pp_value p1 pp_value p2
   | THUNK (t, _) -> fprintf fmt "@[<2><thunk %a>@]" pp_term t
 
-let rec pp_db_value fmt v =
-  match v with
+let rec pp_db_value fmt = function
   | VDBINT n -> fprintf fmt "%d" n
   | VDBFUN (t, e) -> fprintf fmt "@[<2>fun . ->@ %a@]" pp_db_term t
   | VDBFIXFUN (t, env) ->
       fprintf fmt "@[<2>fixfun . ->@ fun . ->@ %a@]" pp_db_term t
+  | VDBPAIR (t1, t2) ->
+      fprintf fmt "@[<2>(%a , %a)@]" pp_db_value t1 pp_db_value t2
   | DBTHUNK (t, _) -> fprintf fmt "@[<2><thunk %a>@]" pp_db_term t

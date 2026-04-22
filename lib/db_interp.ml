@@ -3,8 +3,8 @@ open Db_term
 type dbinterpreter = dbterm * dbenv -> dbvalue
 
 let rec find (i : int) = function
-  | END -> failwith ("Unbound var pos" ^ string_of_int i)
-  | NEXT (t, e) -> if i = 0 then t else find (i - 1) e
+  | DBEND -> failwith ("Unbound var pos" ^ string_of_int i)
+  | DBNEXT (t, e) -> if i = 0 then t else find (i - 1) e
 
 let rec dbinterp_by_name : dbinterpreter =
  fun (p, e) ->
@@ -32,10 +32,19 @@ let rec dbinterp_by_name : dbinterpreter =
       | _ -> failwith "if condition not bool")
   | DBAPP (p1, p2) -> (
       match dbinterp_by_name (p1, e) with
-      | VDBFUN (t, e1) -> dbinterp_by_name (t, NEXT (DBTHUNK (p2, e), e1))
+      | VDBFUN (t, e1) -> dbinterp_by_name (t, DBNEXT (DBTHUNK (p2, e), e1))
       | _ -> failwith "not a function in application")
   | DBLET (p1, p2) -> dbinterp_by_name (DBAPP (DBFUN p2, p1), e)
-  | DBFIXFUN p1 -> dbinterp_by_name (DBFUN p1, NEXT (DBTHUNK (p, e), e))
+  | DBFIXFUN p1 -> dbinterp_by_name (DBFUN p1, DBNEXT (DBTHUNK (p, e), e))
+  | DBPAIR (p1, p2) -> DBTHUNK (p, e)
+  | DBFST p -> (
+      match dbinterp_by_name (p, e) with
+      | DBTHUNK (DBPAIR (p1, _), e) -> dbinterp_by_name (p1, e)
+      | _ -> failwith "fst not pair")
+  | DBSND p -> (
+      match dbinterp_by_name (p, e) with
+      | DBTHUNK (DBPAIR (_, p2), e) -> dbinterp_by_name (p2, e)
+      | _ -> failwith "snd not pair")
 
 (* for fixed point operator, cannot interp by value *)
 (* extended values *)
@@ -63,10 +72,22 @@ let rec dbinterp_by_value : dbinterpreter =
   | DBAPP (p1, p2) -> (
       match dbinterp_by_value (p1, e) with
       | VDBFUN (t, e1) ->
-          dbinterp_by_value (t, NEXT (dbinterp_by_value (p2, e), e1))
+          dbinterp_by_value (t, DBNEXT (dbinterp_by_value (p2, e), e1))
       | VDBFIXFUN (t, e1) ->
           dbinterp_by_value
-            (t, NEXT (dbinterp_by_value (p2, e), NEXT (VDBFIXFUN (t, e1), e1)))
+            ( t,
+              DBNEXT (dbinterp_by_value (p2, e), DBNEXT (VDBFIXFUN (t, e1), e1))
+            )
       | _ -> failwith "not a function in application")
   | DBLET (p1, p2) -> dbinterp_by_value (DBAPP (DBFUN p2, p1), e)
   | DBFIXFUN p1 -> VDBFIXFUN (p1, e)
+  | DBPAIR (p1, p2) ->
+      VDBPAIR (dbinterp_by_value (p1, e), dbinterp_by_value (p2, e))
+  | DBFST p -> (
+      match dbinterp_by_value (p, e) with
+      | VDBPAIR (v1, _) -> v1
+      | _ -> failwith "fst not pair")
+  | DBSND p -> (
+      match dbinterp_by_value (p, e) with
+      | VDBPAIR (_, v2) -> v2
+      | _ -> failwith "snd not pair")
