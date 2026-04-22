@@ -9,8 +9,21 @@ type term =
   | IFZ of term * term * term
   | FIX of string * term
   | LET of string * term * term
+  | PAIR of term * term
+  | FST of term
+  | SND of term
 
 and op = ADD | MINUS | MULTI | DIVIDE
+
+type env = END | NEXT of string * value * env
+
+and value =
+  | VINT of int
+  | VFUN of string * term * env
+  | VFIX of string * term * env
+  | VFIXFUN of string * string * term * env
+  | VPAIR of value * value
+  | THUNK of term * env (* legacy for call-by-name *)
 
 let ( ++ ) a b = BOP (a, ADD, b)
 let ( -- ) a b = BOP (a, MINUS, b)

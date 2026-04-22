@@ -66,7 +66,7 @@ let test_db_fact2 (interp : dbinterpreter) () =
       )
   in
   let t = APP (fact, INT 3) in
-  check db_value "factorial" (VDBINT 6) (interp (translate_db t END, END))
+  check db_value "factorial" (VDBINT 6) (interp (translate_db t VEND, END))
 
 let make_db_interp_tests (interp : dbinterpreter) =
   [

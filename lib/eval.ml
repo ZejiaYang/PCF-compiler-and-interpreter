@@ -15,6 +15,9 @@ let rec sub (x : string) (u : term) (t : term) : term =
       let p1' = sub' p1 in
       if x == y then LET (y, p1', p2) else LET (y, p1', sub' p2)
   | FIX (y, p) -> if x == y then t else FIX (y, sub' p)
+  | PAIR (p1, p2) -> PAIR (sub' p1, sub' p2)
+  | FST t -> FST (sub' t)
+  | SND t -> SND (sub' t)
 
 (*
 * (fun x -> fun x -> x) 2 3
@@ -57,6 +60,9 @@ let rec eval_by_name (p : term) : term =
       | _ -> failwith "not a function in application")
   | LET (x, p1, p2) -> eval_by_name (APP (FUN (x, p2), p1))
   | FIX (x, p1) -> eval_by_name (APP (FUN (x, p1), p))
+  | PAIR (p1, p2) -> PAIR (eval_by_name p1, eval_by_name p2)
+  | FST t -> FST (eval_by_name t)
+  | SND t -> SND (eval_by_name t)
 
 (*
 a Call-by-value evaluator for PCF
@@ -86,3 +92,6 @@ let rec eval_by_value (p : term) : term =
       | _ -> failwith "not a function in application")
   | LET (x, p1, p2) -> eval_by_value (APP (FUN (x, p2), p1))
   | FIX (x, p1) -> eval_by_value (APP (FUN (x, p1), p))
+  | PAIR (p1, p2) -> PAIR (eval_by_value p1, eval_by_value p2)
+  | FST t -> FST (eval_by_value t)
+  | SND t -> SND (eval_by_value t)

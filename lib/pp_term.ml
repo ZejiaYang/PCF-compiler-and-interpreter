@@ -1,7 +1,5 @@
 open Term
-open Interp
 open Db_term
-open Db_interp
 open Format
 
 let pp_op fmt = function
@@ -24,6 +22,9 @@ let rec pp_term fmt t =
   | FIX (f, p) -> fprintf fmt "@[<2>fix %s.@ %a@]" f pp_term p
   | LET (x, p1, p2) ->
       fprintf fmt "@[<2>let %s = %a in@ %a@]" x pp_term p1 pp_term p2
+  | PAIR (p1, p2) -> fprintf fmt "@[<2>(%a , %a)@]" pp_term p1 pp_term p2
+  | FST p -> fprintf fmt "@[<2>fst %a@]" pp_term p
+  | SND p -> fprintf fmt "@[<2>snd %a@]" pp_term p
 
 let rec pp_db_term fmt t =
   match t with
@@ -47,6 +48,7 @@ let rec pp_value fmt v =
   | VFIX (f, p, _) -> fprintf fmt "@[<2>fix %s.@ %a@]" f pp_term p
   | VFIXFUN (f, x, p, _env) ->
       fprintf fmt "@[<2>fixfun %s ->@ fun %s ->@ %a@]" f x pp_term p
+  | VPAIR (p1, p2) -> fprintf fmt "@[<2>(%a , %a)@]" pp_value p1 pp_value p2
   | THUNK (t, _) -> fprintf fmt "@[<2><thunk %a>@]" pp_term t
 
 let rec pp_db_value fmt v =

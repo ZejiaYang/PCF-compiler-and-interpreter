@@ -1,13 +1,5 @@
 open Db_term
 
-type dbenv = END | NEXT of dbvalue * dbenv
-
-and dbvalue =
-  | VDBINT of int
-  | VDBFUN of dbterm * dbenv
-  | VDBFIXFUN of dbterm * dbenv
-  | DBTHUNK of dbterm * dbenv
-
 type dbinterpreter = dbterm * dbenv -> dbvalue
 
 let rec find (i : int) = function

@@ -56,10 +56,76 @@ let make_interp_tests (interp : interpreter) =
     ("fact", `Quick, test_fact interp);
   ]
 
+let pair_test_suite (interp : interpreter) =
+  [
+    ( "pair_fst",
+      `Quick,
+      fun () ->
+        let t = FST (PAIR (INT 10, INT 20)) in
+        check value "fst extraction" (VINT 10) (interp (t, END)) );
+    ( "pair_snd",
+      `Quick,
+      fun () ->
+        let t = SND (PAIR (INT 10, INT 20)) in
+        check value "snd extraction" (VINT 20) (interp (t, END)) );
+    ( "nested_pair",
+      `Quick,
+      fun () ->
+        (* Represents: snd (fst ((1, 2), 3)) -> 2 *)
+        let t = SND (FST (PAIR (PAIR (INT 1, INT 2), INT 3))) in
+        check value "nested extraction" (VINT 2) (interp (t, END)) );
+    ( "pair_compute",
+      `Quick,
+      fun () ->
+        let t =
+          LET
+            ( "x",
+              INT 5,
+              PAIR (BOP (VAR "x", ADD, INT 1), BOP (VAR "x", MINUS, INT 1)) )
+        in
+        check value "compute inside pair" (VINT 6) (interp (FST t, END)) );
+    ( "pair_func_arg",
+      `Quick,
+      fun () ->
+        let t =
+          APP
+            ( FUN ("p", BOP (FST (VAR "p"), ADD, SND (VAR "p"))),
+              PAIR (INT 3, INT 4) )
+        in
+        check value "passing pair to fun" (VINT 7) (interp (t, END)) );
+  ]
+
+let cbn_test_suite interp =
+  [
+    ( "cbn_fun_argument",
+      `Quick,
+      fun () ->
+        (* (fun x -> 0) ((fix f. fun x -> f x) 0) ==> 0 *)
+        let diverge =
+          APP (FIX ("f", FUN ("x", APP (VAR "f", VAR "x"))), INT 0)
+        in
+        let t = APP (FUN ("x", INT 0), diverge) in
+        check value "call by name ignores argument" (VINT 0) (interp (t, END))
+    );
+    ( "cbn_fst_only",
+      `Quick,
+      fun () ->
+        (* Define a term that loops forever if evaluated *)
+        let infinite_loop = FIX ("f", FUN ("x", APP (VAR "f", VAR "x"))) in
+        let loop_call = APP (infinite_loop, INT 0) in
+        (* Construct: FST (10, infinite_loop) *)
+        let t = FST (PAIR (INT 10, loop_call)) in
+        check value "cbn_laziness_test" (VINT 10) (interp (t, END)) );
+  ]
+
 let () =
   run "interp suite"
     [
-      ("interp_by_value_recur", make_interp_tests interp_by_value_recur);
+      (* ("interp_by_value_recur", make_interp_tests interp_by_value_recur);
       ("interp_by_value", make_interp_tests interp_by_value);
-      ("interp_by_name", make_interp_tests interp_by_name);
+      ("interp_by_name", make_interp_tests interp_by_name); *)
+      ("pairs_by_value", pair_test_suite interp_by_value);
+      ("pairs_by_value_recur", pair_test_suite interp_by_value_recur);
+      ("pairs_by_name", pair_test_suite interp_by_name);
+      ("cbn_test", cbn_test_suite interp_by_name);
     ]

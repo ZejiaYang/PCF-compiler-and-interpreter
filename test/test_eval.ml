@@ -42,7 +42,7 @@ let test_call_by_value () =
   (* (fun x -> 0) ((fix f. fun x -> f x) 0) ==> 0 *)
   let diverge = APP (FIX ("f", FUN ("x", APP (VAR "f", VAR "x"))), INT 0) in
   let t = APP (FUN ("x", INT 0), diverge) in
-  check value "call by name ignores argument" (INT 0) (eval_by_name t)
+  check value "call by value evaluates argument" (INT 0) (eval_by_name t)
 
 let test_suite =
   [

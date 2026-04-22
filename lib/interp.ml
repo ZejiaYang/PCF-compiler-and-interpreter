@@ -1,13 +1,5 @@
 open Term
-
-type env = END | NEXT of string * value * env
-
-and value =
-  | VINT of int
-  | VFUN of string * term * env
-  | VFIX of string * term * env
-  | VFIXFUN of string * string * term * env
-  | THUNK of term * env (* legacy for call-by-name *)
+open Pp_term
 
 (*
 here unified to use closure for both call-by-value and call-by-name
@@ -26,7 +18,7 @@ let rec interp_by_name : interpreter =
   match p with
   | VAR x -> (
       match find x e with
-      | VINT _ | VFUN _ -> find x e (* value *)
+      | VINT _ | VFUN _ | VPAIR _ -> find x e (* value *)
       | THUNK (t, e) -> interp_by_name (t, e)
       | _ -> failwith "store impossible values")
   | INT n -> VINT n
@@ -52,6 +44,16 @@ let rec interp_by_name : interpreter =
       | _ -> failwith "not a function in application")
   | LET (x, p1, p2) -> interp_by_name (APP (FUN (x, p2), p1), e)
   | FIX (x, p1) -> interp_by_name (APP (FUN (x, p1), p), e)
+  | PAIR (p1, p2) -> THUNK (p, e)
+  | FST p -> (
+      match interp_by_name (p, e) with
+      | THUNK (PAIR (p1, _), e) -> interp_by_name (p1, e)
+      | _ -> failwith "fst not pair")
+  | SND p -> (
+      match interp_by_name (p, e) with
+      | THUNK (PAIR (_, p2), e) -> interp_by_name (p2, e)
+      | _ -> failwith "snd not pair")
+(* | _ -> failwith (Format.asprintf "impossible construct %a" pp_term p) *)
 
 (* for fixed point operator, cannot interp by value *)
 (* extended values *)
@@ -60,7 +62,7 @@ let rec interp_by_value : interpreter =
   match p with
   | VAR x -> (
       match find x e with
-      | VINT _ | VFUN _ -> find x e (* values *)
+      | VINT _ | VFUN _ | VPAIR _ -> find x e (* values *)
       | VFIX (y, t, e) -> interp_by_value (FIX (y, t), e) (* extended values*)
       | _ -> failwith "env not storing values")
   | INT n -> VINT n
@@ -87,6 +89,15 @@ let rec interp_by_value : interpreter =
       | _ -> failwith "not a function in application")
   | LET (x, p1, p2) -> interp_by_value (APP (FUN (x, p2), p1), e)
   | FIX (x, p1) -> interp_by_value (p1, NEXT (x, VFIX (x, p, e), e))
+  | PAIR (p1, p2) -> VPAIR (interp_by_value (p1, e), interp_by_value (p2, e))
+  | FST p -> (
+      match interp_by_value (p, e) with
+      | VPAIR (v1, _) -> v1
+      | _ -> failwith "fst not pair")
+  | SND p -> (
+      match interp_by_value (p, e) with
+      | VPAIR (_, v2) -> v2
+      | _ -> failwith "snd not pair")
 
 (*
 call-by-value interperter with recursive closures
@@ -127,4 +138,15 @@ let rec interp_by_value_recur : interpreter =
       | _ -> failwith "not a function in application")
   | LET (x, p1, p2) -> interp_by_value_recur (APP (FUN (x, p2), p1), e)
   | FIX (f, FUN (x, t)) -> VFIXFUN (f, x, t, e)
-  | _ -> failwith "impossible, only function recursively defined"
+  | PAIR (p1, p2) ->
+      VPAIR (interp_by_value_recur (p1, e), interp_by_value_recur (p2, e))
+  | FST p -> (
+      match interp_by_value (p, e) with
+      | VPAIR (v1, _) -> v1
+      | _ -> failwith "fst not pair")
+  | SND p -> (
+      match interp_by_value (p, e) with
+      | VPAIR (_, v2) -> v2
+      | _ -> failwith "snd not pair")
+  | FIX _ ->
+      failwith (Format.asprintf "impossible construct inside FIX %a" pp_term p)

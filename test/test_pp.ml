@@ -72,7 +72,7 @@ let db_tests =
                            ( VAR "x",
                              INT 1,
                              VAR "x" ** APP (VAR "f", VAR "x" -- INT 1) ) ) ))
-                END)));
+                VEND)));
   ]
 
 (* --- Main Entry Point --- *)
