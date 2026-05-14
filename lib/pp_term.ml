@@ -1,6 +1,7 @@
 open Term
 open Db_term
 open Format
+open Compile
 
 let pp_op fmt = function
   | ADD -> fprintf fmt "+"
@@ -114,3 +115,44 @@ let rec pp_db_value fmt = function
   | VDBLEAF v -> fprintf fmt "@[<2>leaf(%a)@]" pp_db_value v
   | VDBTREE (v1, v2) ->
       fprintf fmt "@[<2>tree(%a,@ %a)@]" pp_db_value v1 pp_db_value v2
+
+let rec pp_instruction fmt = function
+  | Ldi n -> fprintf fmt "Ldi %d" n
+  | Push -> fprintf fmt "Push"
+  | Search i -> fprintf fmt "Search %d" i
+  | Pushenv -> fprintf fmt "Pushenv"
+  | Popenv -> fprintf fmt "Popenv"
+  | Mkclos code -> fprintf fmt "Mkclos (%a)" pp_code code
+  | Mkrclos code -> fprintf fmt "Mkrclos (%a)" pp_code code
+  | Apply -> fprintf fmt "Apply"
+  | Test (c1, c2) -> fprintf fmt "Test (%a, %a)" pp_code c1 pp_code c2
+  | Add -> fprintf fmt "Add"
+  | Sub -> fprintf fmt "Sub"
+  | Mult -> fprintf fmt "Mult"
+  | Div -> fprintf fmt "Div"
+  | Mkpair -> fprintf fmt "Mkpair"
+  | Fst -> fprintf fmt "Fst"
+  | Snd -> fprintf fmt "Snd"
+  | Nil -> fprintf fmt "Nil"
+  | Cons -> fprintf fmt "Cons"
+  | CTest (c1, c2) -> fprintf fmt "CTest (%a, %a)" pp_code c1 pp_code c2
+  | Hd -> fprintf fmt "Hd"
+  | Tl -> fprintf fmt "Tl"
+  | Leaf -> fprintf fmt "Leaf"
+  | Mktree -> fprintf fmt "Mktree"
+  | Item -> fprintf fmt "Item"
+  | TTest (c1, c2) -> fprintf fmt "TTest (%a, %a)" pp_code c1 pp_code c2
+  | Ltree -> fprintf fmt "Ltree"
+  | Rtree -> fprintf fmt "Rtree"
+
+and pp_code fmt (code : code) =
+  fprintf fmt "[";
+  let rec aux = function
+    | END -> ()
+    | i :: END -> pp_instruction fmt i
+    | i :: rest ->
+        fprintf fmt "%a; " pp_instruction i;
+        aux rest
+  in
+  aux code;
+  fprintf fmt "]"
