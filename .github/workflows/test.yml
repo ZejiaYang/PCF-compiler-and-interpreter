@@ -17,6 +17,10 @@ jobs:
           ocaml-compiler: 5.4.0
           opam-disable-sandboxing: true
 
-      - run: opam install . --deps-only --with-test
+      - name: Install dependencies
+        run: 
+          opam install . --deps-only --with-test
+          opam install ppx_deriving ppx_deriving_show ppx_deriving_eq
 
-      - run: opam exec -- dune runtest
+      - name: Run tests
+        run: opam exec -- dune runtest
