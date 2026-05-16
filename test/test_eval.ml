@@ -3,7 +3,7 @@ open Pcf.Pp_term
 open Pcf.Term
 open Alcotest
 
-let value = testable pp_term ( = )
+let value = testable pp_term_c ( = )
 
 let test_shadowing () =
   (* (fun x -> fun x -> x) 2 3 => 3 *)

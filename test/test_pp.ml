@@ -17,24 +17,24 @@ let check_pp = check string
 let named_tests =
   [
     test_case "int" `Quick (fun () ->
-        check_pp "int" "42" (pp_to_string pp_term (INT 42)));
+        check_pp "int" "42" (pp_to_string pp_term_c (INT 42)));
     test_case "var" `Quick (fun () ->
-        check_pp "var" "x" (pp_to_string pp_term (VAR "x")));
+        check_pp "var" "x" (pp_to_string pp_term_c (VAR "x")));
     test_case "fun" `Quick (fun () ->
-        check_pp "fun" "fun x -> 1" (pp_to_string pp_term (FUN ("x", INT 1))));
+        check_pp "fun" "fun x -> 1" (pp_to_string pp_term_c (FUN ("x", INT 1))));
     test_case "app" `Quick (fun () ->
-        check_pp "app" "(f 2)" (pp_to_string pp_term (APP (VAR "f", INT 2))));
+        check_pp "app" "(f 2)" (pp_to_string pp_term_c (APP (VAR "f", INT 2))));
     test_case "bop" `Quick (fun () ->
         check_pp "bop" "(1 + 2)"
-          (pp_to_string pp_term (BOP (INT 1, ADD, INT 2))));
+          (pp_to_string pp_term_c (BOP (INT 1, ADD, INT 2))));
     test_case "ifz" `Quick (fun () ->
         check_pp "ifz" "if 0 = 0 then 1 else 2"
-          (pp_to_string pp_term (IFZ (INT 0, INT 1, INT 2))));
+          (pp_to_string pp_term_c (IFZ (INT 0, INT 1, INT 2))));
     test_case "let" `Quick (fun () ->
         check_pp "let" "let x = 1 in x"
-          (pp_to_string pp_term (LET ("x", INT 1, VAR "x"))));
+          (pp_to_string pp_term_c (LET ("x", INT 1, VAR "x"))));
     test_case "fix" `Quick (fun () ->
-        check_pp "fix" "fix x. x" (pp_to_string pp_term (FIX ("x", VAR "x"))));
+        check_pp "fix" "fix x. x" (pp_to_string pp_term_c (FIX ("x", VAR "x"))));
   ]
 
 (* --- De Bruijn Term Tests --- *)

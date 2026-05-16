@@ -47,14 +47,15 @@ and cvalue =
   | VLeaf of cvalue
   | VTree of cvalue * cvalue
 
-and env = cvalue list (* map from indices to value,*)
+and env = cvalue list (* map from indices to value,*) [@@deriving show, eq]
 
-type stack_item = Env of env | Value of cvalue (*static scoping *)
+type stack_item = Env of env | Value of cvalue
+(*static scoping *) [@@deriving show, eq]
 
 type stack = stack_item list
 
 (* physical design: env is stored as part of stack frame **)
-and state = cvalue * stack * env * code
+and state = cvalue * stack * env * code [@@deriving show, eq]
 
 type compiler = dbterm -> code
 

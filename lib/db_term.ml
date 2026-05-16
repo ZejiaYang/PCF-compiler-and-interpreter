@@ -26,6 +26,7 @@ type dbterm =
   | DBIFLEAF of dbterm * dbterm * dbterm
   | DBLTREE of dbterm
   | DBRTREE of dbterm
+[@@deriving show, eq]
 
 type var_env = VEND | VNEXT of string * var_env
 
@@ -44,6 +45,7 @@ and dbvalue =
   (* -- Tree -- *)
   | VDBLEAF of dbvalue
   | VDBTREE of dbvalue * dbvalue
+[@@deriving show, eq]
 
 let rec find_pos (x : string) (venv : var_env) =
   let rec find_pos_acc x venv pos =

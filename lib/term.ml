@@ -27,7 +27,7 @@ type term =
   | LTREE of term
   | RTREE of term
 
-and op = ADD | MINUS | MULTI | DIVIDE
+and op = ADD | MINUS | MULTI | DIVIDE [@@deriving show, eq]
 
 type env = END | NEXT of string * value * env
 
@@ -45,6 +45,7 @@ and value =
   (* -- Tree -- *)
   | VLEAF of value
   | VTREE of value * value
+[@@deriving show, eq]
 
 let ( ++ ) a b = BOP (a, ADD, b)
 let ( -- ) a b = BOP (a, MINUS, b)

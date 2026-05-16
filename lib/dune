@@ -1,3 +1,14 @@
 (library
  (name pcf)
- (modules eval term pp_term interp db_term db_interp compile))
+ (modules
+  eval
+  term
+  pp_term
+  interp
+  db_term
+  db_interp
+  compile
+  db_type
+  db_type_infer)
+ (preprocess
+  (pps ppx_deriving.show ppx_deriving.eq)))
