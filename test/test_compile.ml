@@ -6,12 +6,22 @@ open Alcotest
 
 let db_value = testable pp_db_value ( = )
 
-let translate_c_value = function
+let rec translate_c_value = function
   | VInt c -> VDBINT c
+  (* -- Pair -- *)
+  | VPair (VInt c1, VInt c2) -> VDBPAIR (VDBINT c1, VDBINT c2)
+  (* -- List -- *)
+  | VNil -> VDBNIL
+  | VCons (VInt hd, tl) -> VDBCONS (VDBINT hd, translate_c_value tl)
+  (* -- Tree -- *)
+  | VLeaf (VInt n) -> VDBLEAF (VDBINT n)
+  | VTree (t1, t2) -> VDBTREE (translate_c_value t1, translate_c_value t2)
+  (* return closure *)
   | VClosure (code, env) ->
       failwith (Format.asprintf "Function closure: %a" pp_code code)
   | VRClosure (code, env) ->
       failwith (Format.asprintf "Recursive closure: %a" pp_code code)
+  | _ -> failwith "illegal construct"
 
 let make_db_compile_suite suite_name (compiler : compiler)
     (tests : abstract_test list) =
@@ -44,5 +54,8 @@ let make_db_compile_suite suite_name (compiler : compiler)
 let () =
   run "De Bruijn Compiler Suite"
     [
-      make_db_compile_suite "standard_by_value_compiler" compile standard_tests;
+      make_db_compile_suite "standard_by_value" compile standard_tests;
+      make_db_compile_suite "tree" compile tree_tests;
+      make_db_compile_suite "list" compile list_tests;
+      make_db_compile_suite "pair" compile pair_tests;
     ]
