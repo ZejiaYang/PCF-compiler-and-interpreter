@@ -18,7 +18,7 @@ jobs:
           opam-disable-sandboxing: true
 
       - name: Install dependencies
-        run: 
+        run: |
           opam install . --deps-only --with-test
           opam install ppx_deriving ppx_deriving_show ppx_deriving_eq
 
