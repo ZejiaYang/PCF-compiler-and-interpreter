@@ -33,7 +33,20 @@ type instruction =
   | Rtree
 
 and code = END | ( :: ) of instruction * code
-and cvalue = VInt of int | VClosure of code * env | VRClosure of code * env
+
+and cvalue =
+  | VInt of int
+  | VClosure of code * env
+  | VRClosure of code * env
+  (* -- Pair -- *)
+  | VPair of cvalue * cvalue
+  (* -- List -- *)
+  | VNil
+  | VCons of cvalue * cvalue
+  (* -- Tree -- *)
+  | VLeaf of cvalue
+  | VTree of cvalue * cvalue
+
 and env = cvalue list (* map from indices to value,*)
 
 type stack_item = Env of env | Value of cvalue (*static scoping *)
@@ -64,18 +77,18 @@ let rec compile (term : dbterm) : code =
   | DBLET (p1, p2) -> compile (DBAPP (DBFUN p2, p1))
   | DBFIXFUN p -> Mkrclos (compile p) :: END
   (* -- Pair -- *)
-  | DBPAIR (p1, p2) -> compile p2 @ compile p1 @ (Mkpair :: END)
+  | DBPAIR (p1, p2) -> compile p2 @ (Push :: compile p1) @ (Mkpair :: END)
   | DBFST p -> compile p @ (Fst :: END)
   | DBSND p -> compile p @ (Snd :: END)
   (* -- List -- *)
   | DBNIL -> Nil :: END
-  | DBCONS (t, l) -> compile l @ compile t @ (Cons :: END)
+  | DBCONS (t, l) -> compile l @ (Push :: compile t) @ (Cons :: END)
   | DBIFNIL (y, p1, p2) -> compile y @ (CTest (compile p1, compile p2) :: END)
   | DBHD p -> compile p @ (Hd :: END)
   | DBTL p -> compile p @ (Tl :: END)
   (* -- Tree -- *)
   | DBLEAF p -> compile p @ (Leaf :: END)
-  | DBTREE (l, u) -> compile l @ compile u @ (Mktree :: END)
+  | DBTREE (l, u) -> compile l @ (Push :: compile u) @ (Mktree :: END)
   | DBITEM p -> compile p @ (Item :: END)
   | DBIFLEAF (p, p1, p2) -> compile p @ (TTest (compile p1, compile p2) :: END)
   | DBLTREE p -> compile p @ (Ltree :: END)
@@ -121,6 +134,28 @@ let step (state : state) : state =
       | _ -> failwith "binary operands not integer")
   | VInt 0, state, env, Test (i, j) :: c -> (VInt 0, state, env, i @ c)
   | VInt n, state, env, Test (i, j) :: c -> (VInt n, state, env, j @ c)
+  (* -- Pair -- *)
+  | p1, Value p2 :: state, env, Mkpair :: c -> (VPair (p1, p2), state, env, c)
+  | VPair (p1, p2), state, env, Fst :: c -> (p1, state, env, c)
+  | VPair (p1, p2), state, env, Snd :: c -> (p2, state, env, c)
+  (* -- List -- *)
+  | _, state, env, Nil :: c -> (VNil, state, env, c)
+  | hd, Value tl :: state, env, Cons :: c -> (VCons (hd, tl), state, env, c)
+  | VNil, state, env, CTest (i, j) :: c -> (VNil, state, env, i @ c)
+  | VCons (hd, tl), state, env, CTest (i, j) :: c ->
+      (VCons (hd, tl), state, env, j @ c)
+  | VCons (hd, tl), state, env, Hd :: c -> (hd, state, env, c)
+  | VCons (hd, tl), state, env, Tl :: c -> (tl, state, env, c)
+  (* -- Tree -- *)
+  | lf, state, env, Leaf :: c -> (VLeaf lf, state, env, c)
+  | rt, Value lt :: state, env, Mktree :: c -> (VTree (lt, rt), state, env, c)
+  | VLeaf it, state, env, Item :: c -> (it, state, env, c)
+  | VLeaf n, state, env, TTest (i, j) :: c -> (VLeaf n, state, env, i @ c)
+  | VTree (lt, rt), state, env, TTest (i, j) :: c ->
+      (VTree (lt, rt), state, env, j @ c)
+  | VTree (lt, rt), state, env, Ltree :: c -> (lt, state, env, c)
+  | VTree (lt, rt), state, env, Rtree :: c -> (rt, state, env, c)
+  (* -- illegal -- *)
   | _, _, _, END -> state
   | _ ->
       failwith
