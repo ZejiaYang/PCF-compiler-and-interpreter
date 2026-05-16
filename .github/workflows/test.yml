@@ -17,6 +17,9 @@ jobs:
           ocaml-compiler: 5.4.0
           opam-disable-sandboxing: true
 
-      - run: opam install . --deps-only --with-test
+      - name: Install dependencies
+        run: |
+          opam install . --deps-only --with-test
 
-      - run: opam exec -- dune runtest
+      - name: Run tests
+        run: opam exec -- dune runtest
