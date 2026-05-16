@@ -15,8 +15,6 @@ depends: [
   "alcotest" {with-test}
   "odoc" {with-doc}
   "ppx_deriving"
-  "ppx_deriving_show"
-  "ppx_deriving_eq"
 ]
 build: [
   ["dune" "subst"] {dev}
