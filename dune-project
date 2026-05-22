@@ -22,7 +22,7 @@
  (depends
   ocaml
   (alcotest :with-test)
-  (ppx_deriving :with-print))
+  (ppx_deriving :with-test))
  (tags
   ("add topics" "to describe" your project)))
 

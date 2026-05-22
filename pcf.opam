@@ -14,7 +14,7 @@ depends: [
   "ocaml"
   "alcotest" {with-test}
   "odoc" {with-doc}
-  "ppx_deriving" {with-print}
+  "ppx_deriving" {with-test}
 ]
 build: [
   ["dune" "subst"] {dev}
