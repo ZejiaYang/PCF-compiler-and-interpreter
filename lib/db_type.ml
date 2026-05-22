@@ -1,24 +1,24 @@
 open Db_term
 open Term
 
-type dbtype =
+type tdbtype =
   | Nat
-  | Fun of dbtype * dbtype
-  | Fixfun of dbtype * dbtype
-  | Pair of dbtype * dbtype
-  | List of dbtype option (* empty list *)
-  | Tree of dbtype
+  | Fun of tdbtype * tdbtype
+  | Fixfun of tdbtype * tdbtype
+  | Pair of tdbtype * tdbtype
+  | List of tdbtype option (* empty list *)
+  | Tree of tdbtype
 
 and tdbterm =
   (* type inference to translate from dbterm to tdbterm *)
   | TDBVAR of int
-  | TDBFUN of dbtype * tdbterm
   | TDBAPP of tdbterm * tdbterm
   | TDBINT of int
   | TDBBOP of tdbterm * op * tdbterm
   | TDBIFZ of tdbterm * tdbterm * tdbterm
-  | TDBFIXFUN of dbtype * tdbterm (*recursive closure*)
-  | TDBLET of dbtype * tdbterm * tdbterm
+  | TDBFUN of tdbtype * tdbterm
+  | TDBFIXFUN of tdbtype * tdbtype * tdbterm (*recursive closure*)
+  | TDBLET of tdbtype * tdbterm * tdbterm
   (* -- Pair -- *)
   | TDBPAIR of tdbterm * tdbterm
   | TDBFST of tdbterm
@@ -39,19 +39,18 @@ and tdbterm =
 [@@deriving show, eq]
 
 (* function *)
-let ( ==> ) a b = Fun (a, b)
+let ( => ) a b = Fun (a, b)
 
 (* recursive function *)
 let ( =>> ) a b = Fixfun (a, b)
 
-type tenv = dbtype list (* type checker for typed db *)
-type typechecker = tenv -> tdbterm -> dbtype
+type ttenv = tdbtype list (* type checker for typed db *)
+type typechecker = ttenv -> tdbterm -> tdbtype
 
 (* type checker for typed db terms *)
-let rec check_tdb (env : tenv) (term : tdbterm) : dbtype =
+let rec check_tdb (env : ttenv) (term : tdbterm) : tdbtype =
   match term with
   | TDBVAR i -> List.nth env i
-  | TDBFUN (a, t) -> Fun (a, check_tdb (a :: env) t)
   | TDBAPP (p1, p2) -> (
       match (check_tdb env p1, check_tdb env p2) with
       | Fun (p1, p2), p3 | Fixfun (p1, p2), p3 ->
@@ -66,7 +65,10 @@ let rec check_tdb (env : tenv) (term : tdbterm) : dbtype =
       match (check_tdb env p, check_tdb env t1, check_tdb env t2) with
       | Nat, p1, p2 -> if p1 = p2 then p1 else failwith "Ifz condition not nat"
       | _ -> failwith "illegal Ifz construct")
-  | TDBFIXFUN (a, t) -> Fixfun (a, check_tdb (a :: env) t)
+  | TDBFUN (a, t) -> Fun (a, check_tdb (a :: env) t)
+  | TDBFIXFUN (a, b, t) ->
+      if check_tdb (a :: Fun (a, b) :: env) t = b then Fixfun (a, b)
+      else failwith "illegal fixfun construct"
   | TDBLET (a, t, p) ->
       let b = check_tdb env t in
       let c = check_tdb (a :: env) p in
@@ -109,7 +111,7 @@ let rec check_tdb (env : tenv) (term : tdbterm) : dbtype =
   | TDBTREE (p1, p2) -> (
       match (check_tdb env p1, check_tdb env p2) with
       | Tree a, Tree b ->
-          if a == b then Tree a else failwith "Tree branch not same type"
+          if a = b then Tree a else failwith "Tree branch not same type"
       | _ -> failwith "Tree branch not tree")
   | TDBITEM t -> (
       match check_tdb env t with Tree a -> a | _ -> failwith "Item not tree")

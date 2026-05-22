@@ -21,7 +21,8 @@
  (description "A longer description")
  (depends
   ocaml
-  (alcotest :with-test))
+  (alcotest :with-test)
+  (ppx_deriving :with-test))
  (tags
   ("add topics" "to describe" your project)))
 

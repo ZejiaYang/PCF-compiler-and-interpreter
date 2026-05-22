@@ -51,7 +51,7 @@ let rec find_pos (x : string) (venv : var_env) =
   let rec find_pos_acc x venv pos =
     match venv with
     | VEND -> failwith ("Unbound var " ^ x)
-    | VNEXT (y, venv) -> if x == y then pos else find_pos_acc x venv (pos + 1)
+    | VNEXT (y, venv) -> if x = y then pos else find_pos_acc x venv (pos + 1)
   in
   find_pos_acc x venv 0
 
