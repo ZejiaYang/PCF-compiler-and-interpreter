@@ -19,7 +19,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          opam install . --deps-only --with-test
+          opam install . --deps-only --with-test --with-print
 
       - name: Run tests
         run: opam exec -- dune runtest
