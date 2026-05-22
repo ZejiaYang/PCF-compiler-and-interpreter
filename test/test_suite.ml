@@ -1,10 +1,10 @@
 open Pcf.Term
-open Pcf.Db_type
+open Pcf.Db_type_infer
 open Alcotest
 
 let nat = Nat
-let nat_list = List (Some Nat)
-let empty_list = List None
+let nat_list = List Nat
+let empty_list = List Any
 let nat_tree = Tree Nat
 
 type abstract_test = {
@@ -16,6 +16,12 @@ type abstract_test = {
 
 let pair_tests : abstract_test list =
   [
+    {
+      name = "pair";
+      term = PAIR (INT 10, INT 20);
+      expected = VPAIR (VINT 10, VINT 20);
+      dbtype = Pair (Nat, Nat);
+    };
     {
       name = "pair_fst";
       term = FST (PAIR (INT 10, INT 20));

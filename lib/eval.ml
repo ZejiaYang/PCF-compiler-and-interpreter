@@ -6,15 +6,15 @@ let rec sub (x : string) (u : term) (t : term) : term =
   let sub' = sub x u in
   match t with
   | INT _ -> t
-  | VAR y -> if x == y then u else t
-  | FUN (y, p) -> if x == y then t else FUN (y, sub' p)
+  | VAR y -> if x = y then u else t
+  | FUN (y, p) -> if x = y then t else FUN (y, sub' p)
   | BOP (p1, op, p2) -> BOP (sub' p1, op, sub' p2)
   | IFZ (p1, p2, p3) -> IFZ (sub' p1, sub' p2, sub' p3)
   | APP (p1, p2) -> APP (sub' p1, sub' p2)
   | LET (y, p1, p2) ->
       let p1' = sub' p1 in
-      if x == y then LET (y, p1', p2) else LET (y, p1', sub' p2)
-  | FIX (y, p) -> if x == y then t else FIX (y, sub' p)
+      if x = y then LET (y, p1', p2) else LET (y, p1', sub' p2)
+  | FIX (y, p) -> if x = y then t else FIX (y, sub' p)
   | PAIR (p1, p2) -> PAIR (sub' p1, sub' p2)
   | FST t -> FST (sub' t)
   | SND t -> SND (sub' t)
@@ -63,7 +63,7 @@ let rec eval_by_name (p : term) : term =
       | _ -> failwith "binary operands not integer")
   | IFZ (p1, p2, p3) -> (
       match eval_by_name p1 with
-      | INT n -> if n == 0 then eval_by_name p2 else eval_by_name p3
+      | INT n -> if n = 0 then eval_by_name p2 else eval_by_name p3
       | _ -> failwith "if condition not bool")
   | APP (p1, p2) -> (
       match eval_by_name p1 with

@@ -1,3 +1,9 @@
 (tests
- (names test_pp test_eval test_interp test_db_interp test_compile)
+ (names
+  test_pp
+  test_eval
+  test_interp
+  test_db_interp
+  test_compile
+  test_type_check)
  (libraries pcf alcotest))

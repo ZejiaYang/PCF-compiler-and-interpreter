@@ -11,7 +11,7 @@ let test_shadowing () =
   check value "shadowing" (INT 3) (eval_by_name t)
 
 let test_higher_order () =
-  (* (fun x -> fun y -> (fun x -> x + y) x) 4 5 ==> 9 *)
+  (* (fun x -> fun y -> (fun x -> x + y) x) 4 5 => 9 *)
   let inner = FUN ("x", VAR "x" ++ VAR "y") in
   let t =
     APP (APP (FUN ("x", FUN ("y", APP (inner, VAR "x"))), INT 4), INT 5)
@@ -24,7 +24,7 @@ let test_static_vs_dynamic () =
     let f = fun y -> y + x in
     let x = 5 in
     f 6
-    ==> 10 under static binding
+    => 10 under static binding
   *)
   let f_body = FUN ("y", VAR "y" ++ VAR "x") in
   let t =
@@ -33,13 +33,13 @@ let test_static_vs_dynamic () =
   check value "static binding" (INT 10) (eval_by_name t)
 
 let test_call_by_name () =
-  (* (fun x -> 0) ((fix f. fun x -> f x) 0) ==> 0 *)
+  (* (fun x -> 0) ((fix f. fun x -> f x) 0) => 0 *)
   let diverge = APP (FIX ("f", FUN ("x", APP (VAR "f", VAR "x"))), INT 0) in
   let t = APP (FUN ("x", INT 0), diverge) in
   check value "call by name ignores argument" (INT 0) (eval_by_name t)
 
 let test_call_by_value () =
-  (* (fun x -> 0) ((fix f. fun x -> f x) 0) ==> 0 *)
+  (* (fun x -> 0) ((fix f. fun x -> f x) 0) => 0 *)
   let diverge = APP (FIX ("f", FUN ("x", APP (VAR "f", VAR "x"))), INT 0) in
   let t = APP (FUN ("x", INT 0), diverge) in
   check value "call by value evaluates argument" (INT 0) (eval_by_name t)
